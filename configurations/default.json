@@ -1,0 +1,12 @@
+{
+    "profile":{
+        "name": "Default profile",
+        "inherit_from": ""
+    },
+    "mappings":[{
+            "SET(BTN_WEST)": "KEYPRESS(scrolllock)",
+            "UNSET(BTN_WEST)": "KEYUP(a)",
+            "EQUAL(BTN_WEST, 0)": "KEYPRESS(a)"
+        }
+    ]
+}
