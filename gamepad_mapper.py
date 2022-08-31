@@ -80,17 +80,17 @@ class MapperCondition:
 
     def _set_check(self, params, event):
         return event.code == params[0] and \
-            event.ev_type == 'ABS' and \
-            event.state == '1'
+            event.ev_type == 'Key' and \
+            event.state == 1
 
     def _unset_check(self, params, event):
         return event.code == params[0] and \
-            event.ev_type == 'ABS' and \
-            event.state == '0'
+            event.ev_type == 'Key' and \
+            event.state == 0
 
     def _equal_check(self, params, event):
         return event.code == params[0] and \
-            event.ev_type == 'ABS' and \
+            event.ev_type == 'Absolute' and \
             event.state == params[1]
 
     def _generate_condition(self, condition_name, params):
@@ -145,9 +145,12 @@ class GamepadMapper:
         return evaluation_map
 
     def evaluate_event(self, device_id, event):
-        for possible_record in self.mapping_evaluation_map[device_id][event.code]:
-            if possible_record.checker.check(event):
-                possible_record.action.perform(event)
+        print((device_id, event.code, event.state, event.ev_type))
+        if event.code in self.mapping_evaluation_map[device_id]:
+            for possible_record in self.mapping_evaluation_map[device_id][event.code]:
+                print("Hi")
+                if possible_record.checker.check(event):
+                    possible_record.action.perform(event)
 
     def set_configuration(self, configuration: MapperConfiguration):
         self.mapping_evaluation_map = self._generate_evaluation_map(configuration)
@@ -157,9 +160,16 @@ class GamepadMapper:
 
     def _gamepad_main_loop(self, gamepad_index):
         while 1:
-            events = inputs.devices.gamepads[gamepad_index]
+            events = inputs.devices.gamepads[gamepad_index].read()
             for event in events:
                 self.evaluate_event(self.routing.routing[gamepad_index], event)
+
+    def _thread_done(self, future):
+        if future:
+            if future.done():
+                if future.exception():
+                    future.result()
+                future = None
 
     def run(self):
         num_devices = len(inputs.devices.gamepads)
@@ -169,7 +179,8 @@ class GamepadMapper:
             self._pool = ThreadPoolExecutor(num_devices)
             self._futures = []
             for device in range(num_devices):
-                self._futures.append(self._pool.submit(lambda: self.main_loop(device)))
+                self._futures.append(self._pool.submit(lambda: self._gamepad_main_loop(device)))
+                self._futures[-1].add_done_callback(self._thread_done)
 
 
 class GamepadMapperGui:

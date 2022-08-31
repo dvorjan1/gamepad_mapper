@@ -4,7 +4,7 @@
         "inherit_from": ""
     },
     "mappings":[{
-            "SET(BTN_WEST)": "KEYPRESS(scrolllock)",
+            "SET(BTN_WEST)": "KEYDOWN(a)",
             "UNSET(BTN_WEST)": "KEYUP(a)",
             "EQUAL(BTN_WEST, 0)": "KEYPRESS(a)"
         }
