@@ -200,18 +200,22 @@ class GamepadMapperGui:
     def _select_configuration(self, icon, item: MenuItem):
         self.mapper.set_configuration(self.configuration_dict[item.text])
 
+    def _close(self, icon, item: MenuItem):
+        icon.stop()
+        os._exit(0) # Kill process => kill also stuck threads
+
     def run(self):
         menuitems = []
         for configuration_name in self.configuration_dict:
             menuitems.append(MenuItem(configuration_name, self._select_configuration))
-        menuitems.append(MenuItem("Close", Icon.stop))
+        menuitems.append(MenuItem("Close", self._close))
         
         icon_image = Image.open(os.path.join(os.path.dirname(__file__), IMAGE_FOLDER, ICON_FILE_NAME))
 
         self.mapper.run()
 
         Icon(
-            "test",
+            "Gamepad mapper",
             icon_image,
             menu=Menu(*menuitems),
         ).run()
