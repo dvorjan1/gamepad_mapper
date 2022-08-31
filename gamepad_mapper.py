@@ -41,7 +41,7 @@ class MapperAction:
         pyautogui.keyDown(params[0])
 
     def _keyup_action(self, params, event):
-        pyautogui.keyUp(params[0], event)
+        pyautogui.keyUp(params[0])
 
     def _keypress_action(self, params, event):
         pyautogui.press(params[0])
@@ -148,7 +148,6 @@ class GamepadMapper:
         print((device_id, event.code, event.state, event.ev_type))
         if event.code in self.mapping_evaluation_map[device_id]:
             for possible_record in self.mapping_evaluation_map[device_id][event.code]:
-                print("Hi")
                 if possible_record.checker.check(event):
                     possible_record.action.perform(event)
 
