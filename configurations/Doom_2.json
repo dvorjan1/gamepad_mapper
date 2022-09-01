@@ -1,0 +1,29 @@
+{
+    "profile":{
+        "name": "Doom 2",
+        "inherit_from": ""
+    },
+    "mappings":[{
+            "EQUAL(ABS_HAT0X, 1)": "KEYDOWN(right)",
+            "EQUAL(ABS_HAT0X, -1)": "KEYDOWN(left)",
+            "EQUAL(ABS_HAT0X, 0)": "KEYUP(right)",
+            "EQUAL(ABS_HAT0X, 0) ": "KEYUP(left)",
+            "EQUAL(ABS_HAT0Y, 1)": "KEYDOWN(down)",
+            "EQUAL(ABS_HAT0Y, -1)": "KEYDOWN(up)",
+            "EQUAL(ABS_HAT0Y, 0)": "KEYUP(down)",
+            "EQUAL(ABS_HAT0Y, 0) ": "KEYUP(up)",
+            "SET(BTN_TR)": "KEYDOWN(shift)",
+            "UNSET(BTN_TR)": "KEYUP(shift)",
+            "SET(BTN_TR) ": "KEYDOWN(enter)",
+            "UNSET(BTN_TR) ": "KEYUP(enter)",
+            "SET(BTN_TL)": "KEYDOWN(alt)",
+            "UNSET(BTN_TL)": "KEYUP(alt)",
+            "SET(BTN_WEST)": "KEYDOWN(ctrl)",
+            "UNSET(BTN_WEST)": "KEYUP(ctrl)",
+            "SET(BTN_EAST)": "KEYDOWN(space)",
+            "UNSET(BTN_EAST)": "KEYUP(space)",
+            "SET(BTN_SELECT)": "KEYDOWN(esc)",
+            "UNSET(BTN_SELECT)": "KEYUP(esc)"
+        }
+    ]
+}
