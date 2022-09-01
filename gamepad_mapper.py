@@ -91,7 +91,7 @@ class MapperCondition:
     def _equal_check(self, params, event):
         return event.code == params[0] and \
             event.ev_type == 'Absolute' and \
-            event.state == params[1]
+            event.state == int(params[1])
 
     def _generate_condition(self, condition_name, params):
         fcn = self._dummy_check
@@ -145,7 +145,7 @@ class GamepadMapper:
         return evaluation_map
 
     def evaluate_event(self, device_id, event):
-        print((device_id, event.code, event.state, event.ev_type))
+        # print((device_id, event.code, event.state, event.ev_type))
         if event.code in self.mapping_evaluation_map[device_id]:
             for possible_record in self.mapping_evaluation_map[device_id][event.code]:
                 if possible_record.checker.check(event):
