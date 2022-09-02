@@ -5,6 +5,7 @@ import os
 import re
 from pystray import Icon, Menu, MenuItem
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 from PIL import Image
 
 IMAGE_FOLDER = 'images'
@@ -123,12 +124,16 @@ class GamepadMapper:
         def __init__(self, checker, action) -> None:
             self.checker = checker
             self.action = action
-            self._pool = None
-            self._futures = []
 
     def __init__(self, mapper_configuration, routing = GamePadRouting()) -> None:
         self.mapping_evaluation_map = self._generate_evaluation_map(mapper_configuration)
+        self.mapping_evaluation_map_counter = 0
+        self._mapping_evaluation_map_lock = Lock()
         self.routing = routing
+        self.routing_counter = 0
+        self._routing_lock = Lock()
+        self._pool = None
+        self._futures = []
 
     def _generate_evaluation_map(self, mapping: MapperConfiguration):
         evaluation_map = []
