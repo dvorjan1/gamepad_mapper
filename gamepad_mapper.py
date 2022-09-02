@@ -3,6 +3,7 @@ import pyautogui
 import json
 import os
 import re
+import copy
 from pystray import Icon, Menu, MenuItem
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
@@ -149,24 +150,40 @@ class GamepadMapper:
             evaluation_map.append(device_evaluation_map)
         return evaluation_map
 
-    def evaluate_event(self, device_id, event):
+    def evaluate_event(self, device_id, event, mapping_evaluation_map):
         # print((device_id, event.code, event.state, event.ev_type))
-        if event.code in self.mapping_evaluation_map[device_id]:
-            for possible_record in self.mapping_evaluation_map[device_id][event.code]:
+        if event.code in mapping_evaluation_map[device_id]:
+            for possible_record in mapping_evaluation_map[device_id][event.code]:
                 if possible_record.checker.check(event):
                     possible_record.action.perform(event)
 
     def set_configuration(self, configuration: MapperConfiguration):
-        self.mapping_evaluation_map = self._generate_evaluation_map(configuration)
+        with self._mapping_evaluation_map_lock:
+            self.mapping_evaluation_map_counter += 1
+            self.mapping_evaluation_map = self._generate_evaluation_map(configuration)
 
     def set_routing(self, routing: GamePadRouting):
-        self.routing = routing
+        with self._routing_lock:
+            self.routing_counter += 1
+            self.routing = routing
 
     def _gamepad_main_loop(self, gamepad_index):
+        mapping_evaluation_map_local = None
+        mapping_evaluation_map_counter_local = -1
+        routing_local = None
+        routing_counter_local = -1
         while 1:
             events = inputs.devices.gamepads[gamepad_index].read()
+
+            with self._mapping_evaluation_map_lock:
+                if mapping_evaluation_map_counter_local != self.mapping_evaluation_map_counter:
+                    mapping_evaluation_map_local = copy.deepcopy(self.mapping_evaluation_map)
+            with self._routing_lock:
+                if routing_counter_local != self.routing_counter:
+                    routing_local = copy.deepcopy(self.routing)
+
             for event in events:
-                self.evaluate_event(self.routing.routing[gamepad_index], event)
+                self.evaluate_event(routing_local.routing[gamepad_index], event, mapping_evaluation_map_local)
 
     def _thread_done(self, future):
         if future:
