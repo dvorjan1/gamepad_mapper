@@ -14,8 +14,10 @@ class GamepadMapper:
             self.checker = checker
             self.action = action
 
-    def __init__(self, mapper_configuration, routing = GamePadRouting()) -> None:
-        self.mapping_evaluation_map = self._generate_evaluation_map(mapper_configuration)
+    def __init__(self, mapper_configuration, routing=GamePadRouting()) -> None:
+        self.mapping_evaluation_map = self._generate_evaluation_map(
+            mapper_configuration
+        )
         self.mapping_evaluation_map_counter = 0
         self._mapping_evaluation_map_lock = Lock()
         self.routing = routing
@@ -34,7 +36,9 @@ class GamepadMapper:
                 code = checker.get_code()
                 if code not in device_evaluation_map:
                     device_evaluation_map[code] = []
-                device_evaluation_map[code].append(self.GamepadMapperEventTuple(checker, action))
+                device_evaluation_map[code].append(
+                    self.GamepadMapperEventTuple(checker, action)
+                )
             evaluation_map.append(device_evaluation_map)
         return evaluation_map
 
@@ -64,14 +68,23 @@ class GamepadMapper:
             events = inputs.devices.gamepads[gamepad_index].read()
 
             with self._mapping_evaluation_map_lock:
-                if mapping_evaluation_map_counter_local != self.mapping_evaluation_map_counter:
-                    mapping_evaluation_map_local = copy.deepcopy(self.mapping_evaluation_map)
+                if (
+                    mapping_evaluation_map_counter_local
+                    != self.mapping_evaluation_map_counter
+                ):
+                    mapping_evaluation_map_local = copy.deepcopy(
+                        self.mapping_evaluation_map
+                    )
             with self._routing_lock:
                 if routing_counter_local != self.routing_counter:
                     routing_local = copy.deepcopy(self.routing)
 
             for event in events:
-                self.evaluate_event(routing_local.routing[gamepad_index], event, mapping_evaluation_map_local)
+                self.evaluate_event(
+                    routing_local.routing[gamepad_index],
+                    event,
+                    mapping_evaluation_map_local,
+                )
 
     def _thread_done(self, future):
         if future:
@@ -83,10 +96,12 @@ class GamepadMapper:
     def run(self):
         num_devices = len(inputs.devices.gamepads)
         if num_devices == 0:
-            print('No gamepad device found')
+            print("No gamepad device found")
         else:
             self._pool = ThreadPoolExecutor(num_devices)
             self._futures = []
             for device in range(num_devices):
-                self._futures.append(self._pool.submit(lambda: self._gamepad_main_loop(device)))
+                self._futures.append(
+                    self._pool.submit(lambda: self._gamepad_main_loop(device))
+                )
                 self._futures[-1].add_done_callback(self._thread_done)

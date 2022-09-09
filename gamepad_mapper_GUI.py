@@ -5,10 +5,11 @@ from PIL import Image
 from gamepad_mapper.gamepad_mapper import GamepadMapper
 from gamepad_mapper.mapper_configuration import MapperConfiguration
 
-IMAGE_FOLDER = 'images'
-CONFIG_FOLDER = 'configurations'
-ICON_FILE_NAME = 'icon.png'
-DEFAULT_PROFILE_NAME = 'Default profile'
+IMAGE_FOLDER = "images"
+CONFIG_FOLDER = "configurations"
+ICON_FILE_NAME = "icon.png"
+DEFAULT_PROFILE_NAME = "Default profile"
+
 
 class GamepadMapperGui:
     def __init__(self) -> None:
@@ -22,7 +23,9 @@ class GamepadMapperGui:
         configurations = []
         configs_folder = os.path.join(os.path.dirname(__file__), CONFIG_FOLDER)
         for file_name in os.listdir(configs_folder):
-            configurations.append(MapperConfiguration(os.path.join(configs_folder, file_name)))
+            configurations.append(
+                MapperConfiguration(os.path.join(configs_folder, file_name))
+            )
         return configurations
 
     def _select_configuration(self, icon, item: MenuItem):
@@ -30,15 +33,17 @@ class GamepadMapperGui:
 
     def _close(self, icon, item: MenuItem):
         icon.stop()
-        os._exit(0) # Kill process => kill also stuck threads
+        os._exit(0)  # Kill process => kill also stuck threads
 
     def run(self):
         menuitems = []
         for configuration_name in self.configuration_dict:
             menuitems.append(MenuItem(configuration_name, self._select_configuration))
         menuitems.append(MenuItem("Close", self._close))
-        
-        icon_image = Image.open(os.path.join(os.path.dirname(__file__), IMAGE_FOLDER, ICON_FILE_NAME))
+
+        icon_image = Image.open(
+            os.path.join(os.path.dirname(__file__), IMAGE_FOLDER, ICON_FILE_NAME)
+        )
 
         self.mapper.run()
 
@@ -47,6 +52,7 @@ class GamepadMapperGui:
             icon_image,
             menu=Menu(*menuitems),
         ).run()
+
 
 if __name__ == "__main__":
     GamepadMapperGui().run()
