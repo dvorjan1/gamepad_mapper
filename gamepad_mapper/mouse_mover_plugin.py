@@ -23,17 +23,13 @@ class MouseMoverPlugin:
             xoffset, yoffset = None, None
             with self._vlock:
                 if self._v_x != 0.0 or self._v_y != 0.0:
-                    xoffset = self._v_x * delta
-                    yoffset = self._v_y * delta
+                    xoffset, yoffset = (self._v_x * delta, self._v_y * delta)
             if xoffset is not None:
                 cur_x, cur_y = pyautogui.position()
-                diff_x = abs(cur_x - self._wanted_x)
-                diff_y = abs(cur_y - self._wanted_y)
+                diff_x, diff_y = (abs(cur_x - self._wanted_x), abs(cur_y - self._wanted_y))
                 if diff_x > 2.0 or diff_y > 2.0:
-                    self._wanted_x = cur_x
-                    self._wanted_y = cur_y
-                self._wanted_x += xoffset
-                self._wanted_y += yoffset
+                    self._wanted_x, self._wanted_y = (cur_x, cur_y)
+                self._wanted_x, self._wanted_y = (self._wanted_x + xoffset, self._wanted_y + yoffset)
                 pyautogui.moveTo(self._wanted_x, self._wanted_y)
             sleep_delay = wakeup_time + self._period/1000.0 - time.time()
             if sleep_delay > 0:
@@ -52,6 +48,7 @@ class MouseMoverPlugin:
 
     def _set_mouse_velocity_x(self, params, event):
         v_x = self._parse_scaled_value(params, event)
+        pyautogui.getActiveWindowTitle()
         with self._vlock:
             self._v_x = v_x
 
@@ -74,9 +71,16 @@ class MouseMoverPlugin:
         else:
             pyautogui.click(x, y)
 
+    def _move_to(self, params, event):
+        x, y = pyautogui.position()
+        x = int(params[0]) if params[0].isnumeric() else x
+        y = int(params[1]) if params[1].isnumeric() else y
+        pyautogui.moveTo(x, y)
+
     def get_actions(self):
         return [
             ("mousevelx", self._set_mouse_velocity_x),
             ("mousevely", self._set_mouse_velocity_y),
-            ("click", self._click)
+            ("click", self._click),
+            ("mousemove", self._move_to)
         ]
