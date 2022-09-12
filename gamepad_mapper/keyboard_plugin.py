@@ -15,9 +15,13 @@ class KeyboardPlugin:
     def _keypress_action(self, params, event):
         pyautogui.press(params[0])
 
+    def _type(self, params, event):
+        pyautogui.typewrite(params[0])
+
     def get_actions(self):
         return [
             ("keydown", self._keydown_action),
             ("keyup", self._keyup_action),
             ("keypress", self._keypress_action),
+            ("type", self._type)
         ]

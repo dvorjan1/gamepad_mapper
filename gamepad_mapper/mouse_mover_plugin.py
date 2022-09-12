@@ -11,19 +11,28 @@ class MouseMoverPlugin:
         self._wanted_x = 0.0
         self._wanted_y = 0.0
         self._vlock = Lock()
+        self._scroll_value = 0
+        self._scroll_lock = Lock()
         self._stop_flag = False
         self._last_sleep_timestamp = time.time()
 
     def deamon(self):
         self._stop_flag = False
+        last_scroll_value = 0
         while True:
             wakeup_time = time.time()
             delta = wakeup_time - self._last_sleep_timestamp
             self._last_sleep_timestamp = wakeup_time
             xoffset, yoffset = None, None
+            scroll_value = None
             with self._vlock:
                 if self._v_x != 0.0 or self._v_y != 0.0:
                     xoffset, yoffset = (self._v_x * delta, self._v_y * delta)
+            with self._scroll_lock:
+                scroll_value = self._scroll_value
+            if scroll_value > last_scroll_value:
+                pyautogui.scroll(int(scroll_value - last_scroll_value))
+            last_scroll_value = scroll_value
             if xoffset is not None:
                 cur_x, cur_y = pyautogui.position()
                 diff_x, diff_y = (abs(cur_x - self._wanted_x), abs(cur_y - self._wanted_y))
@@ -41,7 +50,7 @@ class MouseMoverPlugin:
         self._stop_flag = True
 
     def _parse_scaled_value(self, params, event):
-        variable = float(params[0]) if params[0].isnumeric() else event.state
+        variable = float(params[0]) if params[0].isnumeric() else int(event.state)
         multiplier = float(params[1]) if len(params) > 1 else 1.0
         offset = float(params[2]) if len(params) > 2 else 0.0
         return multiplier * variable + offset
@@ -77,10 +86,21 @@ class MouseMoverPlugin:
         y = int(params[1]) if params[1].isnumeric() else y
         pyautogui.moveTo(x, y)
 
+    def _scroll(self, params, event):
+        pyautogui.scroll(params[0])
+
+    def _scroll_linear(self, params, event):
+        value = int(params[0]) if params[0].isnumeric() else int(event.state)
+        multiplier = float(params[1])
+        with self._scroll_lock:
+            self._scroll_value = value*multiplier
+
     def get_actions(self):
         return [
             ("mousevelx", self._set_mouse_velocity_x),
             ("mousevely", self._set_mouse_velocity_y),
             ("click", self._click),
             ("mousemove", self._move_to)
+            ("scroll", self. _scroll)
+            ("scrolllinear", self. _scroll_linear)
         ]
