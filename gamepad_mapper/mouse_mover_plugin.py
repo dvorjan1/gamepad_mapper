@@ -60,8 +60,23 @@ class MouseMoverPlugin:
         with self._vlock:
             self._v_y = v_y
 
+    def _click(self, params, event):
+        x, y = pyautogui.position()
+        if len(params) > 0:
+            if params[0] == 'right':
+                pyautogui.click(x, y, button=pyautogui.RIGHT)
+            elif params[0] == 'left':
+                pyautogui.click(x, y, button=pyautogui.LEFT)
+            elif params[0] == 'middle':
+                pyautogui.click(x, y, button=pyautogui.MIDDLE)
+            else:
+                pyautogui.click(x, y)
+        else:
+            pyautogui.click(x, y)
+
     def get_actions(self):
         return [
             ("mousevelx", self._set_mouse_velocity_x),
             ("mousevely", self._set_mouse_velocity_y),
+            ("click", self._click)
         ]
