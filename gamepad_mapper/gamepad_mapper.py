@@ -1,11 +1,14 @@
 import inputs
 import copy
+import re
 from threading import Lock
 from concurrent.futures import ThreadPoolExecutor
 from .gamepad_routing import GamePadRouting
 from .mapper_configuration import MapperConfiguration
 from .mapper_action import MapperAction
 from .mapper_condition import MapperCondition
+
+MAX_PLUGINS = 500  # 500 in magic number! - probably we will never use more plugins ;-)
 
 
 class GamepadMapper:
@@ -15,8 +18,9 @@ class GamepadMapper:
             self.action = action
 
     def __init__(self, mapper_configuration, routing=GamePadRouting()) -> None:
+        self._plugins = self._load_plugins(mapper_configuration)
         self.mapping_evaluation_map = self._generate_evaluation_map(
-            mapper_configuration
+            mapper_configuration, self._plugins
         )
         self.mapping_evaluation_map_counter = 0
         self._mapping_evaluation_map_lock = Lock()
@@ -26,13 +30,27 @@ class GamepadMapper:
         self._pool = None
         self._futures = []
 
-    def _generate_evaluation_map(self, mapping: MapperConfiguration):
+    def _load_plugins(self, mapping: MapperConfiguration):
+        plugins = []
+        camel_to_snake_pattern = re.compile(r"(?<!^)(?=[A-Z])")
+        for plugin_class_name in mapping.get_plugins():
+            plugin_file_name = camel_to_snake_pattern.sub(
+                "_", plugin_class_name
+            ).lower()
+            plugin = None
+            exec(
+                f"from .{plugin_file_name} import {plugin_class_name}\nplugin={plugin_class_name}()"
+            )
+            plugins.append(plugin)
+        return plugins
+
+    def _generate_evaluation_map(self, mapping: MapperConfiguration, plugins):
         evaluation_map = []
         for device_mapping in mapping.get_mappings():
             device_evaluation_map = dict()
             for key in device_mapping:
                 checker = MapperCondition(key)
-                action = MapperAction(device_mapping[key])
+                action = MapperAction(device_mapping[key], plugins)
                 code = checker.get_code()
                 if code not in device_evaluation_map:
                     device_evaluation_map[code] = []
@@ -52,7 +70,10 @@ class GamepadMapper:
     def set_configuration(self, configuration: MapperConfiguration):
         with self._mapping_evaluation_map_lock:
             self.mapping_evaluation_map_counter += 1
-            self.mapping_evaluation_map = self._generate_evaluation_map(configuration)
+            plugins = self._load_plugins(configuration)
+            self.mapping_evaluation_map = self._generate_evaluation_map(configuration, plugins)
+            self._refresh_deamons(plugins)
+            self._plugins = plugins
 
     def set_routing(self, routing: GamePadRouting):
         with self._routing_lock:
@@ -93,15 +114,40 @@ class GamepadMapper:
                     future.result()
                 future = None
 
+    def kill_running_deamons(self):
+        num_devices = len(inputs.devices.gamepads)
+        old_plugins_with_deamon = filter(
+            lambda plugin: hasattr(plugin, "stop_deamon"), self._plugins
+        )
+        if (
+            len(self._futures) > num_devices
+        ):  # Refresh while changing profile, not during first run (no need to stop deamons which are not running yet)
+            for old_plugin in old_plugins_with_deamon:
+                old_plugin.stop_deamon()
+
+    def _refresh_deamons(self, new_plugins):
+        num_devices = len(inputs.devices.gamepads)
+        self.kill_running_deamons()
+        del self._futures[num_devices:]  # Remove killed deamons from futures
+        plugins_with_deamon = filter(
+            lambda plugin: hasattr(plugin, "deamon"), new_plugins
+        )
+        for plugin in plugins_with_deamon:
+            self._futures.append(self._pool.submit(plugin.deamon))
+            self._futures[-1].add_done_callback(self._thread_done)
+
     def run(self):
         num_devices = len(inputs.devices.gamepads)
         if num_devices == 0:
             print("No gamepad device found")
         else:
-            self._pool = ThreadPoolExecutor(num_devices)
+            self._pool = ThreadPoolExecutor(num_devices + MAX_PLUGINS)
             self._futures = []
+
             for device in range(num_devices):
                 self._futures.append(
                     self._pool.submit(lambda: self._gamepad_main_loop(device))
                 )
                 self._futures[-1].add_done_callback(self._thread_done)
+
+            self._refresh_deamons(self._plugins)

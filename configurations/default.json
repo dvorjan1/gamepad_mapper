@@ -1,6 +1,7 @@
 {
     "profile":{
         "name": "Default profile",
+        "plugins": ["MouseMoverPlugin", "KeyboardPlugin"],
         "inherit_from": ""
     },
     "mappings":[{

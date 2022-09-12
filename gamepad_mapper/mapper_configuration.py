@@ -16,7 +16,7 @@ class MapperConfiguration:
         try:
             return self.json["profile"]["plugins"]
         except:
-            return None
+            return []
 
     def get_mappings(self):
         return self.json["mappings"]

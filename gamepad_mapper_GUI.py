@@ -33,7 +33,6 @@ class GamepadMapperGui:
 
     def _close(self, icon, item: MenuItem):
         icon.stop()
-        os._exit(0)  # Kill process => kill also stuck threads
 
     def run(self):
         menuitems = []
@@ -56,3 +55,4 @@ class GamepadMapperGui:
 
 if __name__ == "__main__":
     GamepadMapperGui().run()
+    os._exit(0)  # Kill process => kill also stuck threads

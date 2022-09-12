@@ -1,6 +1,7 @@
 {
     "profile":{
         "name": "Doom 2",
+        "plugins": ["MouseMoverPlugin", "KeyboardPlugin"],
         "inherit_from": ""
     },
     "mappings":[{
