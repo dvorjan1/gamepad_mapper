@@ -5,7 +5,6 @@ Application for mapping gamepad events to keyboard and mouse events to control n
 - [x] Add support for keyboard
 - [x] Add support for more gamepads
 - [x] Add support for mouse actions
-- [ ] Add mapper configuration inheritence based on "profile/inherit_from" parameter
 - [ ] Add source code documentation
 - [ ] Add documentation to the readme file
 - [ ] Add module testing

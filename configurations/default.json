@@ -1,13 +1,19 @@
 {
     "profile":{
         "name": "Default profile",
-        "plugins": ["MouseMoverPlugin", "KeyboardPlugin"],
-        "inherit_from": ""
+        "plugins": ["MouseMoverPlugin", "KeyboardPlugin"]
     },
     "mappings":[{
-            "SET(BTN_WEST)": "KEYDOWN(a)",
-            "UNSET(BTN_WEST)": "KEYUP(a)",
-            "EQUAL(BTN_WEST, 0)": "KEYPRESS(a)"
+            "EQUAL(ABS_HAT0X, 1)": "MOUSEVELX(50, 1, 0)",
+            "EQUAL(ABS_HAT0X, -1)": "MOUSEVELX(-50, 1, 0)",
+            "EQUAL(ABS_HAT0X, 0)": "MOUSEVELX(0, 1, 0)",
+            "EQUAL(ABS_HAT0X, 0) ": "MOUSEVELX(0, 1, 0)",
+            "EQUAL(ABS_HAT0Y, 1)": "MOUSEVELY(50, 1, 0)",
+            "EQUAL(ABS_HAT0Y, -1)": "MOUSEVELY(-50, 1, 0)",
+            "EQUAL(ABS_HAT0Y, 0)": "MOUSEVELY(0, 1, 0)",
+            "EQUAL(ABS_HAT0Y, 0) ": "MOUSEVELY(0, 1, 0)",
+            "SET(BTN_TR)": "CLICK(left)",
+            "SET(BTN_TL)": "CLICK(right)"
         }
     ]
 }
