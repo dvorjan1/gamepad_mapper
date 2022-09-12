@@ -37,11 +37,13 @@ class GamepadMapper:
             plugin_file_name = camel_to_snake_pattern.sub(
                 "_", plugin_class_name
             ).lower()
-            plugin = None
+            plugin_ns = {}
             exec(
-                f"from .{plugin_file_name} import {plugin_class_name}\nplugin={plugin_class_name}()"
+                f"from .{plugin_file_name} import {plugin_class_name}\nplugin={plugin_class_name}()\n",
+                globals(),
+                plugin_ns
             )
-            plugins.append(plugin)
+            plugins.append(plugin_ns["plugin"])
         return plugins
 
     def _generate_evaluation_map(self, mapping: MapperConfiguration, plugins):
@@ -85,6 +87,7 @@ class GamepadMapper:
         mapping_evaluation_map_counter_local = -1
         routing_local = None
         routing_counter_local = -1
+
         while 1:
             events = inputs.devices.gamepads[gamepad_index].read()
 
@@ -138,16 +141,16 @@ class GamepadMapper:
 
     def run(self):
         num_devices = len(inputs.devices.gamepads)
+        self._pool = ThreadPoolExecutor(num_devices + MAX_PLUGINS)
+        self._futures = []
+
         if num_devices == 0:
             print("No gamepad device found")
         else:
-            self._pool = ThreadPoolExecutor(num_devices + MAX_PLUGINS)
-            self._futures = []
-
             for device in range(num_devices):
                 self._futures.append(
                     self._pool.submit(lambda: self._gamepad_main_loop(device))
                 )
                 self._futures[-1].add_done_callback(self._thread_done)
 
-            self._refresh_deamons(self._plugins)
+        self._refresh_deamons(self._plugins)

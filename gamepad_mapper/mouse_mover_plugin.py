@@ -1,6 +1,6 @@
 import pyautogui
 from threading import Lock
-from time import sleep
+import time
 
 
 class MouseMoverPlugin:
@@ -12,15 +12,19 @@ class MouseMoverPlugin:
         self._wanted_y = 0.0
         self._vlock = Lock()
         self._stop_flag = False
+        self._last_sleep_timestamp = time.time()
 
     def deamon(self):
         self._stop_flag = False
         while True:
+            wakeup_time = time.time()
+            delta = wakeup_time - self._last_sleep_timestamp
+            self._last_sleep_timestamp = wakeup_time
             xoffset, yoffset = None, None
             with self._vlock:
                 if self._v_x != 0.0 or self._v_y != 0.0:
-                    xoffset = self._v_x * self._period / 1000
-                    yoffset = self._v_y * self._period / 1000
+                    xoffset = self._v_x * delta
+                    yoffset = self._v_y * delta
             if xoffset is not None:
                 cur_x, cur_y = pyautogui.position()
                 diff_x = abs(cur_x - self._wanted_x)
@@ -30,8 +34,10 @@ class MouseMoverPlugin:
                     self._wanted_y = cur_y
                 self._wanted_x += xoffset
                 self._wanted_y += yoffset
-                pyautogui.moveTo(self._wanted_x, self._wanted_y, self._period)
-            sleep(self._period)
+                pyautogui.moveTo(self._wanted_x, self._wanted_y)
+            sleep_delay = wakeup_time + self._period/1000.0 - time.time()
+            if sleep_delay > 0:
+                time.sleep(sleep_delay)
             if self._stop_flag:
                 break
 
